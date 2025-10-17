@@ -3,13 +3,14 @@
  * 初期設定
  * =================================================================
  */
-// GASのウェブアプリURLをここに設定
 const GAS_API_URL = 'https://script.google.com/macros/s/AKfycbw3EC1QzymI_4DaA8orwKIlf9_sjEV6Q-_pQONgcjifnL0KFhQRdc21ZPmPXj7mp8Gj7A/exec';
+// ご指定のLarkフォーム共有URL
+const LARK_FORM_URL = 'https://bjplm1vnnisz.jp.larksuite.com/share/base/form/shrjpQCxuI9Sa1Q0QC4Y2xgn8Fb'; 
 let userProfile = null;
 
 /**
  * =================================================================
- * メイン処理
+ * メイン処理 (ページの読み込み完了時に実行)
  * =================================================================
  */
 window.addEventListener('load', async () => {
@@ -25,7 +26,8 @@ window.addEventListener('load', async () => {
     if (!data.success) throw new Error(data.message || 'コンテンツの取得に失敗しました。');
 
     updatePage(profile, data.rank, data.contents);
-    document.getElementById('consultation-form').addEventListener('submit', handleConsultationSubmit);
+    // 「相談する」ボタンにイベントリスナーを設定
+    document.getElementById('submit-button').addEventListener('click', openLarkForm);
     
   } catch (error) {
     console.error(error);
@@ -37,67 +39,57 @@ window.addEventListener('load', async () => {
 
 /**
  * =================================================================
- * 相談フォームの送信処理
+ * Larkフォームを事前入力状態で開く処理
  * =================================================================
  */
-async function handleConsultationSubmit(event) {
-  event.preventDefault();
-  const submitButton = document.getElementById('submit-button');
-  const statusElement = document.getElementById('submit-status');
-  const textArea = document.getElementById('consultation-text');
-  const consultationText = textArea.value.trim();
+function openLarkForm() {
+    if (!userProfile) {
+        alert('ユーザー情報が取得できませんでした。ページを再読み込みしてください。');
+        return;
+    }
+    
+    const textArea = document.getElementById('consultation-text');
+    const consultationText = textArea.value.trim();
 
-  if (!consultationText) {
-    statusElement.textContent = '相談内容を入力してください。';
-    statusElement.style.color = '#e74c3c';
-    return;
-  }
-  if (!userProfile) {
-    statusElement.textContent = 'ユーザー情報の取得に失敗しました。ページを再読み込みしてください。';
-    statusElement.style.color = '#e74c3c';
-    return;
-  }
-
-  submitButton.disabled = true;
-  statusElement.textContent = '送信中...';
-  statusElement.style.color = '#3498db';
-
-  try {
-    const response = await fetch(GAS_API_URL, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        action: 'submitConsultation',
-        userId: userProfile.userId,
-        displayName: userProfile.displayName,
-        text: consultationText,
-      }),
+    // LarkフォームのURLに、LINEの情報をパラメータとして付与する
+    // TODO: ご自身のLarkフォームのフィールド名に合わせて、以下のパラメータ名を変更してください
+    // 例: フィールド名が「お名前」ならパラメータ名は「prefill_お名前」
+    const params = new URLSearchParams({
+        'prefill_LINEユーザーID': userProfile.userId,
+        'prefill_LINE表示名': userProfile.displayName,
+        'prefill_相談内容': consultationText
     });
-    
-    if (!response.ok) throw new Error('サーバーとの通信に失敗しました。');
-    const result = await response.json();
-    if (!result.success) throw new Error(result.message || '送信に失敗しました。');
-    
-    textArea.value = '';
-    statusElement.textContent = 'ご相談ありがとうございます。内容を受け付けました。';
-    statusElement.style.color = '#2ecc71';
 
-  } catch (error) {
-    console.error('Error submitting consultation:', error);
-    statusElement.textContent = `送信中にエラーが発生しました。`;
-    statusElement.style.color = '#e74c3c';
-  } finally {
-    submitButton.disabled = false;
-  }
+    const formUrlWithParams = `${LARK_FORM_URL}?${params.toString()}`;
+
+    // LIFFの機能を使って外部リンクを開く
+    liff.openWindow({
+        url: formUrlWithParams,
+        external: true // LINE内ブラウザではなく、標準のブラウザで開く
+    });
 }
 
-// =================================================================
-// ヘルパー関数: ページ表示の更新 (変更なし)
-// =================================================================
+/**
+ * =================================================================
+ * ヘルパー関数: ページ表示の更新
+ * =================================================================
+ */
 function updatePage(profile, rank, contents) {
+  // ユーザー情報を表示
   document.getElementById('user-picture').src = profile.pictureUrl || 'https://placehold.co/80x80/EFEFEF/333333?text=User';
   document.getElementById('user-name').textContent = profile.displayName || 'ゲスト';
   document.getElementById('user-rank').textContent = rank || '---';
+  
+  // フォームのセクションを再描画
+  const formSection = document.getElementById('consultation-form');
+  formSection.innerHTML = `
+    <h2>悩み・相談</h2>
+    <p>事業やビジネス、自己実現に関する悩みなど、お気軽にご相談ください。</p>
+    <textarea id="consultation-text" placeholder="こちらに相談内容を入力してください..."></textarea>
+    <button id="submit-button" class="submit-button">相談フォームを開く</button>
+  `;
+
+  // コンテンツ一覧を表示
   const contentList = document.getElementById('content-list');
   contentList.innerHTML = '';
   if (contents && contents.length > 0) {
@@ -110,70 +102,55 @@ function updatePage(profile, rank, contents) {
   }
 }
 
-// =================================================================
-// ヘルパー関数: コンテンツカードのHTML要素を作成 (変更なし)
-// =================================================================
+/**
+ * =================================================================
+ * ヘルパー関数: コンテンツカードのHTML要素を作成
+ * =================================================================
+ */
 function createContentCard(item) {
   const card = document.createElement('a');
   card.href = item.url;
   card.target = '_blank';
   card.className = 'content-card';
-  const typeIcons = {'動画': '🎥', '資料 (PDF)': '📄', 'テキスト/Wiki': '✍️', 'テンプレート/資料': '📝', 'サービス': '🤝', 'default': '🔗'};
+
+  const typeIcons = {
+    '動画': '🎥',
+    '資料 (PDF)': '📄',
+    'テキスト/Wiki': '✍️',
+    'テンプレート/資料': '📝',
+    'サービス': '🤝',
+    'default': '🔗'
+  };
+
   const firstType = Array.isArray(item.type) ? item.type[0] : item.type;
   const icon = typeIcons[firstType] || typeIcons['default'];
   const typeText = Array.isArray(item.type) ? item.type.join(', ') : item.type;
-  card.innerHTML = `<div class="content-icon">${icon}</div><div class="content-details"><h3>${item.title || '無題のコンテンツ'}</h3><p>種類: ${typeText || '---'}</p></div>`;
+
+  card.innerHTML = `
+    <div class="content-icon">${icon}</div>
+    <div class="content-details">
+      <h3>${item.title || '無題のコンテンツ'}</h3>
+      <p>種類: ${typeText || '---'}</p>
+    </div>
+  `;
   return card;
 }
 
-// =================================================================
-// ヘルパー関数: UI関連 (変更なし)
-// =================================================================
-function hideLoading() {
-  document.getElementById('loading').style.display = 'none';
-  document.getElementById('main-content').style.display = 'block';
-}
-function displayError(message) {
-  const errorDisplay = document.getElementById('error-display');
-  errorDisplay.textContent = message;
-  errorDisplay.style.display = 'block';
-}
-
-
-function updatePage(profile, rank, contents) {
-  document.getElementById('user-picture').src = profile.pictureUrl || 'https://placehold.co/80x80/EFEFEF/333333?text=User';
-  document.getElementById('user-name').textContent = profile.displayName || 'ゲスト';
-  document.getElementById('user-rank').textContent = rank || '---';
-  const contentList = document.getElementById('content-list');
-  contentList.innerHTML = '';
-  if (contents && contents.length > 0) {
-    contents.forEach(item => {
-      const card = createContentCard(item);
-      contentList.appendChild(card);
-    });
-  } else {
-    contentList.innerHTML = '<p>現在閲覧できるコンテンツはありません。</p>';
-  }
-}
-
-function createContentCard(item) {
-  const card = document.createElement('a');
-  card.href = item.url;
-  card.target = '_blank';
-  card.className = 'content-card';
-  const typeIcons = {'動画': '🎥', '資料 (PDF)': '📄', 'テキスト/Wiki': '✍️', 'テンプレート/資料': '📝', 'サービス': '🤝', 'default': '🔗'};
-  const firstType = Array.isArray(item.type) ? item.type[0] : item.type;
-  const icon = typeIcons[firstType] || typeIcons['default'];
-  const typeText = Array.isArray(item.type) ? item.type.join(', ') : item.type;
-  card.innerHTML = `<div class="content-icon">${icon}</div><div class="content-details"><h3>${item.title || '無題のコンテンツ'}</h3><p>種類: ${typeText || '---'}</p></div>`;
-  return card;
-}
-
+/**
+ * =================================================================
+ * ヘルパー関数: ローディング画面の非表示
+ * =================================================================
+ */
 function hideLoading() {
   document.getElementById('loading').style.display = 'none';
   document.getElementById('main-content').style.display = 'block';
 }
 
+/**
+ * =================================================================
+ * ヘルパー関数: エラーメッセージの表示
+ * =================================================================
+ */
 function displayError(message) {
   const errorDisplay = document.getElementById('error-display');
   errorDisplay.textContent = message;
