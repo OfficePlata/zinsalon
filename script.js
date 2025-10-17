@@ -71,10 +71,13 @@ async function handleConsultationSubmit(event) {
   try {
     const response = await fetch(GAS_API_URL, {
       method: 'POST',
-      mode: 'no-cors', // doPostでContentServiceを返す場合は不要な場合も
+      // ▼▼▼ START: 修正箇所 ▼▼▼
+      // 'no-cors'モードを削除し、GASからの応答を正しく受け取れるようにします。
+      // また、Content-Typeを'application/json'に変更します。
       headers: {
-        'Content-Type': 'text/plain', // CORSを避けるため
+        'Content-Type': 'application/json',
       },
+      // ▲▲▲ END: 修正箇所 ▲▲▲
       body: JSON.stringify({
         action: 'submitConsultation',
         userId: userProfile.userId,
@@ -82,6 +85,13 @@ async function handleConsultationSubmit(event) {
         text: consultationText,
       }),
     });
+    
+    // GASからの応答をJSONとして解析
+    const result = await response.json();
+
+    if (!result.success) {
+      throw new Error(result.message || '送信に失敗しました。');
+    }
     
     // 正常に送信されたとみなし、UIを更新
     textArea.value = ''; // テキストエリアをクリア
