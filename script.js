@@ -1,14 +1,17 @@
-
-// =================================================================
-// 初期設定
-// =================================================================
+/**
+ * =================================================================
+ * 初期設定
+ * =================================================================
+ */
+// GASのウェブアプリURLをここに設定
 const GAS_API_URL = 'https://script.google.com/macros/s/AKfycbw3EC1QzymI_4DaA8orwKIlf9_sjEV6Q-_pQONgcjifnL0KFhQRdc21ZPmPXj7mp8Gj7A/exec';
+let userProfile = null;
 
-let userProfile = null; // ユーザープロフィールをグローバルに保持
-
-// =================================================================
-// メイン処理 (ページの読み込み完了時に実行)
-// =================================================================
+/**
+ * =================================================================
+ * メイン処理
+ * =================================================================
+ */
 window.addEventListener('load', async () => {
   try {
     await liff.init({ liffId: "1657635807-1GX23pBJ" });
@@ -32,12 +35,13 @@ window.addEventListener('load', async () => {
   }
 });
 
-// =================================================================
-// ヘルパー関数: 相談フォームの送信処理
-// =================================================================
+/**
+ * =================================================================
+ * 相談フォームの送信処理
+ * =================================================================
+ */
 async function handleConsultationSubmit(event) {
   event.preventDefault();
-
   const submitButton = document.getElementById('submit-button');
   const statusElement = document.getElementById('submit-status');
   const textArea = document.getElementById('consultation-text');
@@ -59,14 +63,9 @@ async function handleConsultationSubmit(event) {
   statusElement.style.color = '#3498db';
 
   try {
-    // ▼▼▼ START: 修正箇所 ▼▼▼
-    // 送信先をGAS_API_URLに戻します。
     const response = await fetch(GAS_API_URL, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      // GAS側で処理を分岐させるための'action'と、送信データをbodyに含めます。
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         action: 'submitConsultation',
         userId: userProfile.userId,
@@ -74,16 +73,10 @@ async function handleConsultationSubmit(event) {
         text: consultationText,
       }),
     });
-    // ▲▲▲ END: 修正箇所 ▲▲▲
     
-    if (!response.ok) {
-        throw new Error('サーバーとの通信に失敗しました。');
-    }
-
+    if (!response.ok) throw new Error('サーバーとの通信に失敗しました。');
     const result = await response.json();
-    if (!result.success) {
-      throw new Error(result.message || '送信に失敗しました。');
-    }
+    if (!result.success) throw new Error(result.message || '送信に失敗しました。');
     
     textArea.value = '';
     statusElement.textContent = 'ご相談ありがとうございます。内容を受け付けました。';
@@ -91,7 +84,7 @@ async function handleConsultationSubmit(event) {
 
   } catch (error) {
     console.error('Error submitting consultation:', error);
-    statusElement.textContent = '送信中にエラーが発生しました。';
+    statusElement.textContent = `送信中にエラーが発生しました。`;
     statusElement.style.color = '#e74c3c';
   } finally {
     submitButton.disabled = false;
@@ -140,6 +133,47 @@ function hideLoading() {
   document.getElementById('loading').style.display = 'none';
   document.getElementById('main-content').style.display = 'block';
 }
+function displayError(message) {
+  const errorDisplay = document.getElementById('error-display');
+  errorDisplay.textContent = message;
+  errorDisplay.style.display = 'block';
+}
+
+
+function updatePage(profile, rank, contents) {
+  document.getElementById('user-picture').src = profile.pictureUrl || 'https://placehold.co/80x80/EFEFEF/333333?text=User';
+  document.getElementById('user-name').textContent = profile.displayName || 'ゲスト';
+  document.getElementById('user-rank').textContent = rank || '---';
+  const contentList = document.getElementById('content-list');
+  contentList.innerHTML = '';
+  if (contents && contents.length > 0) {
+    contents.forEach(item => {
+      const card = createContentCard(item);
+      contentList.appendChild(card);
+    });
+  } else {
+    contentList.innerHTML = '<p>現在閲覧できるコンテンツはありません。</p>';
+  }
+}
+
+function createContentCard(item) {
+  const card = document.createElement('a');
+  card.href = item.url;
+  card.target = '_blank';
+  card.className = 'content-card';
+  const typeIcons = {'動画': '🎥', '資料 (PDF)': '📄', 'テキスト/Wiki': '✍️', 'テンプレート/資料': '📝', 'サービス': '🤝', 'default': '🔗'};
+  const firstType = Array.isArray(item.type) ? item.type[0] : item.type;
+  const icon = typeIcons[firstType] || typeIcons['default'];
+  const typeText = Array.isArray(item.type) ? item.type.join(', ') : item.type;
+  card.innerHTML = `<div class="content-icon">${icon}</div><div class="content-details"><h3>${item.title || '無題のコンテンツ'}</h3><p>種類: ${typeText || '---'}</p></div>`;
+  return card;
+}
+
+function hideLoading() {
+  document.getElementById('loading').style.display = 'none';
+  document.getElementById('main-content').style.display = 'block';
+}
+
 function displayError(message) {
   const errorDisplay = document.getElementById('error-display');
   errorDisplay.textContent = message;
