@@ -30,6 +30,18 @@
       <div id="content-list" class="content-grid">
         <!-- コンテンツはJavaScriptによってここに動的に追加されます -->
       </div>
+
+      <!-- ▼▼▼ START: 悩み相談フォームの追加 ▼▼▼ -->
+      <section class="consultation-section">
+        <h2>悩み・相談フォーム</h2>
+        <p>事業やビジネス、自己実現に関する悩みなど、お気軽にご相談ください。</p>
+        <form id="consultation-form">
+          <textarea id="consultation-text" placeholder="相談内容をここに入力してください..." rows="6" required></textarea>
+          <button type="submit" id="submit-button">送信する</button>
+          <p id="submit-status" class="submit-status"></p>
+        </form>
+      </section>
+      <!-- ▲▲▲ END: 悩み相談フォームの追加 ▲▲▲ -->
     </main>
   </div>
 
@@ -42,3 +54,4 @@
   <script src="script.js"></script>
 </body>
 </html>
+
