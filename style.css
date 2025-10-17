@@ -3,8 +3,7 @@
   --secondary-color: #3498db;
   --background-color: #f8f9fa;
   --card-background: #ffffff;
-  --text-color: #333;
-  --light-text-color: #7f8c8d;
+  --text-color: #333;a
   --border-color: #ecf0f1;
 }
 
@@ -137,6 +136,62 @@ h2 {
   margin: 0;
 }
 
+/* ▼▼▼ START: 悩み相談フォームのスタイル追加 ▼▼▼ */
+.consultation-section {
+  margin-top: 3rem;
+  background-color: var(--card-background);
+  padding: 1.5rem;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+}
+
+.consultation-section p {
+  color: var(--light-text-color);
+  font-size: 0.9rem;
+  line-height: 1.6;
+}
+
+#consultation-form textarea {
+  width: 100%;
+  padding: 0.75rem;
+  border-radius: 8px;
+  border: 1px solid var(--border-color);
+  font-family: 'Noto Sans JP', sans-serif;
+  font-size: 1rem;
+  box-sizing: border-box;
+  margin-bottom: 1rem;
+  resize: vertical;
+}
+
+#consultation-form button {
+  width: 100%;
+  padding: 0.8rem;
+  border: none;
+  background-color: var(--secondary-color);
+  color: white;
+  font-size: 1rem;
+  font-weight: bold;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+#consultation-form button:hover {
+  background-color: #2980b9;
+}
+
+#consultation-form button:disabled {
+  background-color: #bdc3c7;
+  cursor: not-allowed;
+}
+
+.submit-status {
+  margin-top: 1rem;
+  text-align: center;
+  font-weight: bold;
+}
+/* ▲▲▲ END: 悩み相談フォームのスタイル追加 ▲▲▲ */
+
 /* エラーメッセージ */
 .error-message {
   padding: 1rem;
@@ -147,3 +202,4 @@ h2 {
   border-radius: 8px;
   margin: 1rem;
 }
+
