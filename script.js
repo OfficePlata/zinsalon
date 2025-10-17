@@ -1,11 +1,9 @@
+
 // =================================================================
 // 初期設定
 // =================================================================
 const GAS_API_URL = 'https://script.google.com/macros/s/AKfycbw3EC1QzymI_4DaA8orwKIlf9_sjEV6Q-_pQONgcjifnL0KFhQRdc21ZPmPXj7mp8Gj7A/exec';
-// ▼▼▼ START: 修正箇所 ▼▼▼
-// TODO: ステップ1で取得したLarkのWebhook URLをここに設定してください
-const LARK_WEBHOOK_URL = 'https://bjplm1vnnisz.jp.larksuite.com/base/automation/webhook/event/KqSvac83EwV3x3hw1vJjL6NDpzg';
-// ▲▲▲ END: 修正箇所 ▲▲▲
+
 let userProfile = null; // ユーザープロフィールをグローバルに保持
 
 // =================================================================
@@ -62,27 +60,30 @@ async function handleConsultationSubmit(event) {
 
   try {
     // ▼▼▼ START: 修正箇所 ▼▼▼
-    // 送信先をLark Webhook URLに変更し、送信するデータ形式をLarkに合わせます。
-    const response = await fetch(LARK_WEBHOOK_URL, {
+    // 送信先をGAS_API_URLに戻します。
+    const response = await fetch(GAS_API_URL, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
+      // GAS側で処理を分岐させるための'action'と、送信データをbodyに含めます。
       body: JSON.stringify({
-        // Lark Baseのフィールド名と完全に一致させる必要があります
-        "相談日": new Date().toISOString(),
-        "LINEユーザーID": userProfile.userId,
-        "LINE表示名": userProfile.displayName,
-        "相談内容": consultationText,
-        "対応ステータス": "未対応"
+        action: 'submitConsultation',
+        userId: userProfile.userId,
+        displayName: userProfile.displayName,
+        text: consultationText,
       }),
     });
-
-    if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.msg || 'Larkへの送信に失敗しました。');
-    }
     // ▲▲▲ END: 修正箇所 ▲▲▲
+    
+    if (!response.ok) {
+        throw new Error('サーバーとの通信に失敗しました。');
+    }
+
+    const result = await response.json();
+    if (!result.success) {
+      throw new Error(result.message || '送信に失敗しました。');
+    }
     
     textArea.value = '';
     statusElement.textContent = 'ご相談ありがとうございます。内容を受け付けました。';
