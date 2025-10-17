@@ -1,7 +1,6 @@
 // =================================================================
 // 初期設定
 // =================================================================
-// TODO: ステップ2でデプロイしたGASウェブアプリのURLをここに設定してください
 const GAS_API_URL = 'https://script.google.com/macros/s/AKfycbw3EC1QzymI_4DaA8orwKIlf9_sjEV6Q-_pQONgcjifnL0KFhQRdc21ZPmPXj7mp8Gj7A/exec';
 let userProfile = null; // ユーザープロフィールをグローバルに保持
 
@@ -9,35 +8,9 @@ let userProfile = null; // ユーザープロフィールをグローバルに�
 // メイン処理 (ページの読み込み完了時に実行)
 // =================================================================
 window.addEventListener('load', async () => {
-try {
+  try {
     // 1. LIFFの初期化
     await liff.init({ liffId: "1657635807-1GX23pBJ" });
-
-    // 2. LINEプロフィールを取得
-    const profile = await liff.getProfile();
-    
-    // 3. GAS APIにコンテンツを問い合わせ
-    const apiResponse = await fetch(`${GAS_API_URL}?userId=${profile.userId}`);
-    if (!apiResponse.ok) {
-      throw new Error('APIサーバーからの応答がありません。');
-    }
-    const data = await apiResponse.json();
-
-    if (!data.success) {
-      throw new Error(data.message || 'コンテンツの取得に失敗しました。');
-    }
-
-    // 4. 取得したデータでページを更新
-    updatePage(profile, data.rank, data.contents);
-    
-  } catch (error) {
-    console.error(error);
-    displayError('エラーが発生しました。時間をおいて再度お試しください。');
-  } finally {
-    // 5. ローディング画面を非表示にする
-    hideLoading();
-  }
-});
 
     // 2. LINEプロフィールを取得
     const profile = await liff.getProfile();
@@ -57,15 +30,14 @@ try {
     // 4. 取得したデータでページを更新
     updatePage(profile, data.rank, data.contents);
 
-    // ▼▼▼ START: フォーム送信イベントのリスナーを追加 ▼▼▼
+    // 5. フォーム送信イベントのリスナーを追加
     document.getElementById('consultation-form').addEventListener('submit', handleConsultationSubmit);
-    // ▲▲▲ END: フォーム送信イベントのリスナーを追加 ▲▲▲
     
   } catch (error) {
     console.error(error);
     displayError('エラーが発生しました。時間をおいて再度お試しください。');
   } finally {
-    // 5. ローディング画面を非表示にする
+    // 6. ローディング画面を非表示にする
     hideLoading();
   }
 });
@@ -124,6 +96,7 @@ async function handleConsultationSubmit(event) {
     submitButton.disabled = false;
   }
 }
+
 // =================================================================
 // ヘルパー関数: ページ表示の更新
 // =================================================================
@@ -196,3 +169,4 @@ function displayError(message) {
   errorDisplay.textContent = message;
   errorDisplay.style.display = 'block';
 }
+
