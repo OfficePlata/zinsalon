@@ -3,7 +3,7 @@
  * 初期設定
  * =================================================================
  */
-const GAS_API_URL = 'https://script.google.com/macros/s/AKfycbwV7AUwtuqAsXRqXpfDOOgXhX-UvecQwyKeYSauUepWNB5s4FJOmoJzBzm7qnD1XEQ_Cg/exec';
+const GAS_API_URL = 'https://script.google.com/macros/s/AKfycbwSHc2SxOvJOAYlvVaVMlAPu4VzX-Tyc1yWTH-mVyd0dt5yJx9YZLqbBj9oG9AjpE4XzA/exec';
 // ご指定のLarkフォーム共有URL
 const LARK_FORM_URL = 'https://bjplm1vnnisz.jp.larksuite.com/share/base/form/shrjpQCxuI9Sa1Q0QC4Y2xgn8Fb'; 
 let userProfile = null;
