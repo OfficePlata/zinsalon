@@ -15,7 +15,7 @@ let userProfile = null;
  */
 window.addEventListener('load', async () => {
   try {
-    await liff.init({ liffId: "2008552833-ErbGK2v9" });
+    await liff.init({ liffId: "2008754515-0Xkm1WPl" });
     const profile = await liff.getProfile();
     userProfile = profile;
     
